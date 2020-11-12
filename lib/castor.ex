@@ -67,10 +67,17 @@ defmodule Castor do
           Enum.reduce_while(Map.to_list(s), s, fn {attr_name, _}, acc ->
             typedef = normalise_typedef(types[attr_name])
 
-            raw_fetch = Map.fetch(attrs, Atom.to_string(attr_name))
+            case Map.get(attrs, Atom.to_string(attr_name), nil) do
+              nil ->
+                case typedef[:required] do
+                  true ->
+                    {:halt, {:error, {:attr_required, %{required: attr_name}}}}
 
-            case raw_fetch do
-              {:ok, raw_value} ->
+                  _ ->
+                    {:cont, acc}
+                end
+
+              raw_value ->
                 case validate_and_resolve(attr_name, raw_value, typedef) do
                   {:ok, child_struct} ->
                     {:cont, Map.put(acc, attr_name, child_struct)}
@@ -88,15 +95,6 @@ defmodule Castor do
                          expected_type: expected_type,
                          received_type: received_type
                        }}}}
-                end
-
-              :error ->
-                case typedef[:required] do
-                  true ->
-                    {:halt, {:error, {:attr_required, %{required: attr_name}}}}
-
-                  _ ->
-                    {:cont, acc}
                 end
             end
           end)
