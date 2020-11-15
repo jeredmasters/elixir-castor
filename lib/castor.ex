@@ -111,6 +111,15 @@ defmodule Castor do
       :__struct__ ->
         {:valid, value}
 
+      nil ->
+        case typedef[:required] do
+          true ->
+            {:attr_required, %{required: attr_name}}
+
+          _ ->
+            nil
+        end
+
       _ ->
         expected_type = typedef[:type]
 
