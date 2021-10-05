@@ -123,16 +123,20 @@ defmodule Castor do
       _ ->
         expected_type = typedef[:type]
 
-        if Enum.member?(@core_types, expected_type) do
-          received_type = typeof(value)
-
-          if received_type == expected_type do
-            {:valid, value}
-          else
-            {:invalid, expected_type, received_type}
-          end
+        if is_nil(expected_type) do
+          {:valid, value}
         else
-          from_string_map(expected_type, value)
+          if Enum.member?(@core_types, expected_type) do
+            received_type = typeof(value)
+
+            if received_type == expected_type do
+              {:valid, value}
+            else
+              {:invalid, expected_type, received_type}
+            end
+          else
+            from_string_map(expected_type, value)
+          end
         end
     end
   end
